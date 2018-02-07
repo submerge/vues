@@ -1,6 +1,6 @@
-var prifix = 'sd',
+var prefix = 'sd',
     Filters = require('./filters'),
-    Directives = require('./directives')
+    Directives = require('./directives'),
     selector = Object.keys(Directives).map(function (d) {
         return '[' + prefix + '-' + d + ']'
     }).join()
@@ -48,6 +48,7 @@ function parseDirective (attr) {
     if (attr.name.indexOf(prefix) === -1) return
 
     // parse directive name and argument
+    // sd-text   sd-class-red
     var noprefix = attr.name.slice(prefix.length + 1),
         argIndex = noprefix.indexOf('-'),
         dirname  = argIndex === -1
@@ -59,6 +60,8 @@ function parseDirective (attr) {
             : noprefix.slice(argIndex + 1)
 
     // parse scope variable key and pipe filters
+    // msg | capitalize
+    // msg
     var exp = attr.value,
         pipeIndex = exp.indexOf('|'),
         key = pipeIndex === -1

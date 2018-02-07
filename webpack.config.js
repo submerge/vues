@@ -1,5 +1,5 @@
 module.exports = {
-    entry: __dirname + '/src/Seed.js',
+    entry: __dirname + '/dev.js',
     output: {
         path: __dirname + '/dist',
         filename: '[name].js'
