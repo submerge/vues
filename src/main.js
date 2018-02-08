@@ -9,8 +9,8 @@ var prefix = 'sd',
     function Seed (opts) {
         var self = this,
         root = this.el = document.getElementById(opts.id),
-        els  = root.querySelectorAll(selector),
-        bindings = {} // internal real data
+        els  = root.querySelectorAll(selector)
+        var bindings = self._bindings =  {} // internal real data
 
         self.scope = {} // external interface
         
@@ -41,6 +41,30 @@ function cloneAttributes (attributes) {
             value: attr.value
         }
     })
+}
+
+Seed.prototype.dump = function () {
+    var data = {}
+    for (var key in this._bindings) {
+        data[key] = this._bindings[key]
+    }
+    return data
+}
+
+Seed.prototype.destroy = function () {
+    for (var key in this._bindings) {
+        // if (this._bindings[key].dir) {}
+        this._bindings[key].directives.forEach(function (directive) {
+            if (directive.definition.unbind) {
+                directive.definition.unbind(
+                    directive.el,
+                    directive.argument,
+                    directive
+                )
+            }
+        })
+        this.el.parentNode.remove(this.el)
+    }
 }
 
 
@@ -88,7 +112,8 @@ function parseDirective (attr) {
 }
 
 
-function bindDirective (seed, el, bindings, directive) {
+function bindDirective (seed, el, bindings, directive) { 
+    directive.el = el
     el.removeAttribute(directive.attr.name)
     var key = directive.key,
         binding = bindings[key]
@@ -98,7 +123,6 @@ function bindDirective (seed, el, bindings, directive) {
             directives: []
         }
     }
-    directive.el = el
     binding.directives.push(directive)
     // invoke bind hook if exists
     if (directive.bind) {
@@ -118,12 +142,13 @@ function bindAccessors (seed, key, binding) {
         set: function (value) {
             binding.value = value
             binding.directives.forEach(function (directive) {
+                var filteredValue = value
                 if (value && directive.filters) {
-                    value = applyFilters(value, directive)
+                    filteredValue = applyFilters(value, directive)
                 }
                 directive.update(
                     directive.el,
-                    value,
+                    filteredValue,
                     directive.argument,
                     directive,
                     seed

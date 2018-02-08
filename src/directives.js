@@ -35,6 +35,9 @@ module.exports = {
                 })
                 if (match) handler.apply(this, arguments)
             }
+        },
+        repeat: function () {
+            
         }
     }
 }

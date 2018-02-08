@@ -4,11 +4,14 @@ var app = Seed.create({
     id: 'test',
     // template
     scope: {
-        msg: 'hello',
-        hello: 'WHWHWHW',
-        something: '',
+        'msg.wow': 'wow',
+        hello: 'hello',
+        error: 'error',
         changeMessage: function () {
-            app.scope.msg = 'hola'
+            app.scope['msg.wow'] = 'hola'
+        },
+        remove: function () {
+            app.destroy()
         }
     }
 })
