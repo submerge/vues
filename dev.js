@@ -4,7 +4,7 @@ var app = Seed.create({
     id: 'test',
     // template
     scope: {
-        'msg.wow': 'wow',
+        'msg.wow': 'wow12',
         hello: 'hello',
         error: 'error',
         changeMessage: function () {
@@ -12,7 +12,17 @@ var app = Seed.create({
         },
         remove: function () {
             app.destroy()
-        }
+        },
+        todos: [
+            {
+              title: 'make this shit work',
+              done: false  
+            },
+            {
+                title: 'make this shit kinda work',
+                done: true
+            }
+        ]
     }
 })
 window.app = app
