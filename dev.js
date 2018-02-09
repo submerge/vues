@@ -1,28 +1,31 @@
 var Seed = require('./src/main')
 console.log('aa')
-var app = Seed.create({
-    id: 'test',
-    // template
-    scope: {
-        'msg.wow': 'wow12',
-        hello: 'hello',
-        error: 'error',
-        changeMessage: function () {
-            app.scope['msg.wow'] = 'hola'
+Seed.filter('money', function (value) {
+    return '$' + value.toFixed(2)
+})
+
+
+
+var todos = new Seed('#test', {
+    total     : 1000,
+    'msg.wow' : 'wow',
+    hello     : 'hello',
+    todos     : [
+        {
+            title: 'make this shit work',
+            done: false
         },
-        remove: function () {
-            app.destroy()
-        },
-        todos: [
-            {
-              title: 'make this shit work',
-              done: false  
-            },
-            {
-                title: 'make this shit kinda work',
-                done: true
-            }
-        ]
+        {
+            title: 'make this shit kinda work',
+            done: true
+        }
+    ],
+    changeMessage: function () {
+        this.scope['msg.wow'] = 'hola'
+    },
+    remove: function () {
+        this.destroy()
     }
 })
-window.app = app
+
+window.app = todos

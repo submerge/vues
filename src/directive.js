@@ -1,8 +1,11 @@
-var Directives = require('./directives'),
+var config = require('./config'),
+    Directives = require('./directives'),
     Filters = require('./filters')
 
 var KEY_RE = /^[^\|]+/,
-    FILTERS_RE = /\|[^|]+/g
+    FILTERS_RE = /\|[^|]+/g,
+    FILTER_TOKEN_RE = /[^\s']+|'[^']+'/g,
+    QUOTE_RE        = /'/g
     
 function Directive (def, attr, arg, key) {
     if (typeof def === 'function') {
@@ -25,8 +28,14 @@ function Directive (def, attr, arg, key) {
     if (filters) {
         this.filters = filters.map(function (filter) {
             // TODO test performance against regex
-            var tokens = filter.replace('|', '').trim().split(/\s+/)
+            // var tokens = filter.replace('|', '').trim().split(/\s+/)
+            var tokens = filter.slice(1)
+                               .match(FILTER_TOKEN_RE)
+                               .map(function (token) {
+                                   return token.replace(QUOTE_RE, '').trim()
+                               })  
             return {
+                name: tokens[0],
                 apply: Filters[tokens[0]],
                 args: tokens.length > 1 ? tokens.slice(1) : null
             }
@@ -45,13 +54,15 @@ Directive.prototype.update = function (value) {
 Directive.prototype.applyFilters = function (value) {
     var filtered = value
     this.filters.forEach(function (filter) {
+        if (!filter.apply) throw new Error('Unknown filter: ' + filter.name)
         filtered = filter.apply(filtered, filter.args)
     })
     return filtered
 }
 
 module.exports = {
-    parse: function (attr, prefix) {
+    parse: function (attr) {
+        var prefix = config.prefix
         if (attr.name.indexOf(prefix) === -1) {
             return null
         }

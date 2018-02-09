@@ -5,18 +5,24 @@
         <meta charset="utf-8">
         <style>
             .red {
-               color: red; 
+                color: red; 
+            }
+            .todo.done {
+                text-decoration: line-through;
             }
         </style>
 	</head>
 	<body>
 		<div id="test" sd-on-click="changeMessage | delegate .button">
-            <p sd-text="msg.wow | capitalize" sd-on-click="remove"></p>
+            <p sd-text="msg.wow | capitalize | uppercase" sd-on-click="remove"></p>
             <p sd-text="msg.wow | uppercase" class="button"></p>
+            <p sd-text="total | money"></p>
             <p sd-class-red="error" sd-text="hello"></p>
-            <div sd-each="todos">
-                <span sd-text="text"></span>
-            </div>
+            <ul sd-show="todos">
+                <li sd-each-todo="todos">
+                    <span class="todo" sd-text="todo.title" sd-class-done="todo.done"></span> 
+                </li>
+            </ul>
         </div>
     </body>
     
