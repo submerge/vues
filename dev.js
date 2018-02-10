@@ -1,31 +1,48 @@
+
 var Seed = require('./src/main')
-console.log('aa')
+
 Seed.filter('money', function (value) {
-    return '$' + value.toFixed(2)
+    return value
+        ? '$' + value.toFixed(2)
+        : ''
 })
-
-
-
-var todos = new Seed('#test', {
-    total     : 1000,
-    'msg.wow' : 'wow',
-    hello     : 'hello',
-    todos     : [
+Seed.controller('TodoList', function (scope, seed) {
+    console.log('controller invoked')
+    scope.changeMessage = function () {
+        // scope.msg = 'It works!'
+        scope.msg = (Math.random() * 100).toFixed(2) + '% awesomeness'
+    }
+    scope.remove = function () {
+        seed.destroy()
+    }
+})
+Seed.controller('Todo', function (scope) {
+    scope.toggle = function () {
+        scope.done = !scope.done
+    }
+})
+var s = Date.now()
+var data = {
+    msg: 'hello!asdf',
+    total: 9999,
+    error: true,
+    todos: [
         {
-            title: 'make this shit work',
+            title: 'hello!',
+            done: true
+        },
+        {
+            title: 'hello!!',
             done: false
         },
         {
-            title: 'make this shit kinda work',
-            done: true
+            title: 'hello!!!',
+            done: false
         }
-    ],
-    changeMessage: function () {
-        this.scope['msg.wow'] = 'hola'
-    },
-    remove: function () {
-        this.destroy()
-    }
+    ]
+}
+var app = Seed.bootstrap({
+    el: '#app',
+    data: data
 })
-
-window.app = todos
+console.log(Date.now() - s + 'ms')
