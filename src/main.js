@@ -1,21 +1,24 @@
-var config     = require('./config'),
-    Seed       = require('./seed'),
-    directives = require('./directives'),
-    filters    = require('./filters'),
-    controllers = require('./controllers')
+var config      = require('./config'),
+Seed        = require('./seed'),
+directives  = require('./directives'),
+filters     = require('./filters')
 
-Seed.config = config
+var controllers = config.controllers = {},
+datum       = config.datum = {},
+api         = {}
 
 // API
 
-Seed.extend = function (opts) {
+window.Seed = Seed
+
+api.extend = function (opts) {
     var Spore = function () {
         Seed.apply(this, arguments)
         for (var prop in this.extensions) {
             var ext = this.extensions[prop]
             this.scope[prop] = (typeof ext === 'function')
-                                ? ext.bind(this)
-                                : ext
+                ? ext.bind(this)
+                : ext
         }
     }
     Spore.prototype = Object.create(Seed.prototype)
@@ -26,41 +29,45 @@ Seed.extend = function (opts) {
     return Spore
 }
 
-Seed.controller = function (id, extensions) {
+api.data = function (id, data) {
+    if (!data) return datum[id]
+    if (datum[id]) {
+        console.warn('data object "' + id + '"" already exists and has been overwritten.')
+    }
+    datum[id] = data
+}
+
+api.controller = function (id, extensions) {
+    if (!extensions) return controllers[id]
     if (controllers[id]) {
-        console.warn('controller "' + id + '" was already registered and has been overwritten.')
+        console.warn('controller "' + id + '" already exists and has been overwritten.')
     }
     controllers[id] = extensions
 }
 
-Seed.bootstrap = function (seeds) {
-    if (!Array.isArray(seeds)) seeds = [seeds]
-    var instances = []
-    seeds.forEach(function (seed) {
-        var el = seed.el
-        if (typeof el === 'string') {
-            el = document.querySelector(el)
+api.bootstrap = function (opts) {
+    if (opts) {
+        config.prefix = opts.prefix || config.prefix
+    }
+    var app = {},
+        n = 0,
+        el, seed
+    while (el = document.querySelector('[' + config.prefix + '-controller]')) {
+        seed = new Seed(el)
+        if (el.id) {
+            app['$' + el.id] = seed
         }
-        if (!el) console.warn('invalid element or selector: ' + seed.el)
-        instances.push(new Seed(el, seed.data, seed.options))
-    })
-    return instances.length > 1
-        ? instances
-        : instances[0]
+        n++
+    }
+    return n > 1 ? app : seed
 }
 
-
-Seed.plant = Seed.controller
-Seed.sprout  = Seed.bootstrap
-
-
-Seed.directive = function (name, fn) {
+api.directive = function (name, fn) {
     directives[name] = fn
 }
 
-Seed.filter = function (name, fn) {
+api.filter = function (name, fn) {
     filters[name] = fn
 }
 
-window.Seed = Seed
-module.exports = Seed
+module.exports = api

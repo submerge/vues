@@ -1,5 +1,12 @@
+var dev = __dirname + '/dev.js'
+var nested = __dirname + '/nested.js'
+console.log(dev)
+console.log(nested)
 module.exports = {
-    entry: __dirname + '/dev.js',
+    entry: {
+        dev: dev,
+        nested: nested
+    },
     output: {
         path: __dirname + '/dist',
         filename: '[name].js'
