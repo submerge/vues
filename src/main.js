@@ -50,8 +50,8 @@ Seed.bootstrap = function (seeds) {
 }
 
 
-Seed.evolve = Seed.controller
-Seed.plant  = Seed.bootstrap
+Seed.plant = Seed.controller
+Seed.sprout  = Seed.bootstrap
 
 
 Seed.directive = function (name, fn) {

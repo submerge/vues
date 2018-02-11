@@ -1,14 +1,14 @@
-var config      = require('./config'),
+var Emitter = require('emitter').EventEmitter,
+    config      = require('./config'),
     controllers   = require('./controllers'),
-    bindingParser = require('./binding')
+    DirectiveParser = require('./directive-parser')
 
-var map  = Array.prototype.map,
-    each = Array.prototype.forEach
+var slice = Array.prototype.slice
 
 var ctrlAttr,
     eachAttr    
 
-
+// scope chain
 function Seed (el, data, options) {
 
     // refresh
@@ -19,10 +19,17 @@ function Seed (el, data, options) {
         el = document.querySelector(el)
     }
 
+    el.seed = this
     this.el = el
     this._bindings =  {} // internal real data
     this.scope = data // external interface
-    this._options   = options || {}
+    // this._options   = options || {}
+    if (options) {
+        this.parentSeed = options.parentSeed
+        // this.scopeNameRE = options.eachPrefixRE
+        this.eachPrefixRE = new RegExp('^' + options.eachPrefix + '.')
+        this.eachIndex = options.eachIndex
+    }
 
     var key
     // keep a temporary copy for all the real data
@@ -53,9 +60,12 @@ function Seed (el, data, options) {
 
     // copy in methods from controller
     if (controller) {
-        controller.call(null, this.scope, this)
+        controller.call(this, this.scope, this)
     }
 }
+
+Emitter.extend(Seed.prototype)
+
 // 递归处理 v-for v-if
 Seed.prototype._compileNode = function (node, root) {
     var self = this
@@ -64,42 +74,33 @@ Seed.prototype._compileNode = function (node, root) {
 
         self._compileTextNode(node)
 
-    } else if (node.attributes && node.attributes.length) {
+    } else {
 
         var eachExp = node.getAttribute(eachAttr),
             ctrlExp = node.getAttribute(ctrlAttr)
 
         if (eachExp) { // each block
 
-            var binding = bindingParser.parse(eachAttr, eachExp)
+            var binding = DirectiveParser.parse(eachAttr, eachExp)
             if (binding) {
                 self._bind(node, binding)
                 // need to set each block now so it can inherit
                 // parent scope. i.e. the childSeeds must have been
                 // initiated when parent scope setters are invoked
                 self.scope[binding.key] = self._dataCopy[binding.key]
-                delete self._dataCopy[binding.key]
+                ;delete self._dataCopy[binding.key]
             }
 
-        } else if (!ctrlExp || root) { // normal node (non-controller)
+        } else if (ctrlExp && !root) { // nested controllers
 
-            if (node.childNodes.length) {
-                each.call(node.childNodes, function (child) {
-                    self._compileNode(child)
-                })
-            }
+            // TODO need to be clever here!
 
-            // clone attributes because the list can change
-            var attrs = map.call(node.attributes, function (attr) {
-                return {
-                    name: attr.name,
-                    expressions: attr.value.split(',')
-                }
-            })
-            attrs.forEach(function (attr) {
+        } else if (node.attributes && node.attributes.length) { // normal node (non-controller)
+
+            slice.call(node.attributes).forEach(function (attr) {
                 var valid = false
-                attr.expressions.forEach(function (exp) {
-                    var binding = bindingParser.parse(attr.name, exp)
+                attr.value.split(',').forEach(function (exp) {
+                    var binding = DirectiveParser.parse(attr.name, exp)
                     if (binding) {
                         valid = true
                         self._bind(node, binding)
@@ -108,34 +109,43 @@ Seed.prototype._compileNode = function (node, root) {
                 if (valid) node.removeAttribute(attr.name)
             })
         }
+
+        if (!eachExp && !ctrlExp) {
+            if (node.childNodes.length) {
+                slice.call(node.childNodes).forEach(function (child) {
+                    self._compileNode(child)       
+                })
+            }
+        }
     }
 }
 
 
 Seed.prototype._compileTextNode = function (node) {}
 
-Seed.prototype._bind = function (node ,bindingInstance) {
-    bindingInstance.el = node
-    bindingInstance.seed = this
+Seed.prototype._bind = function (node ,directive) {
+    directive.el = node
+    directive.seed = this
     // node.removeAttribute(directive.attr.name)
     // node.removeAttribute(config.prefix + '-' + bindingInstance.directiveName)
-    var key = bindingInstance.key,
-        epr = this._options.eachPrefixRE,
-        isEachKey = epr && epr.test(key),
+    var key = directive.key,
+        snr = this.eachPrefixRE,
+        isEachKey = snr && snr.test(key),
         scopeOwner = this
     
     // TODO make scope chain work on nested controllers
      if (isEachKey) {
-        key = key.replace(epr, '')
+        key = key.replace(snr, '')
         // scope = this._options.parentScope
-    } else if (epr) {
-        scopeOwner = this._options.parentSeed
+    } else if (snr) {
+        scopeOwner = this.parentSeed
     }
+    directive.key = key
     var binding = scopeOwner._bindings[key] || scopeOwner._createBinding(key)
-    binding.instances.push(bindingInstance)
+    binding.instances.push(directive)
     
-    if (bindingInstance.bind) {
-        bindingInstance.bind(binding.value)
+    if (directive.bind) {
+        directive.bind(binding.value)
     }
 }
 
