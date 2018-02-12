@@ -25,7 +25,7 @@ module.exports = {
 
     fn : true,
 
-    bind: function (handler) {
+    bind: function () {
         if (this.seed.each) {
             this.selector = '[' + this.directiveName + '*="' + this.expression + '"]'
             this.delegator = this.seed.el.parentNode
@@ -47,7 +47,7 @@ module.exports = {
                 delegator[selector] = function (e) {
                     var target = delegateCheck(e.target, delegator, selector)
                     if (target) {
-                        handler({
+                        handler.call(self.seed.scope, {
                             el            : target,
                             originalEvent : e,
                             scope: target.seed.scope
@@ -61,7 +61,7 @@ module.exports = {
 
             // a normal handler
             this.handler = function (e) {
-                handler({
+                handler.call(self.seed.scope, {
                     el            : e.currentTarget,
                     originalEvent : e,
                     scope         : self.seed.scope

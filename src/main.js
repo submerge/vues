@@ -45,10 +45,12 @@ api.bootstrap = function (opts) {
 }
 
 api.directive = function (name, fn) {
+    if (!fn) return directives[name]
     directives[name] = fn
 }
 
 api.filter = function (name, fn) {
+    if (!fn) return filters[name]
     filters[name] = fn
 }
 
