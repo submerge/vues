@@ -7,11 +7,12 @@ var todos = [
     { text: 'computed properties', done: false },
     { text: 'parse textnodes', done: false }
 ]
+
 Seed.controller('Todos', function (scope, seed) {
     // regular properties
-    scope.todos = todos
     scope.filter = 'all'
-    scope.remaining = scope.todos.reduce(function (count, todo) {
+    scope.todos = todos
+    scope.remaining = todos.reduce(function (count, todo) {
         return count + (todo.done ? 0 : 1)
     }, 0)
     // computed properties
@@ -34,11 +35,11 @@ Seed.controller('Todos', function (scope, seed) {
         }
     }
     scope.removeTodo = function (e) {
-        scope.todos.splice(e.seed.index, 1)
-        scope.remaining -= e.seed.scope.done ? 0 : 1
+        scope.todos.splice(e.seed.$index, 1)
+        scope.remaining -= e.scope.done ? 0 : 1
     }
     scope.toggleTodo = function (e) {
-        scope.remaining += e.seed.scope.done ? -1 : 1
+        scope.remaining += e.scope.done ? -1 : 1
     }
     scope.setFilter = function (e) {
         scope.filter = e.el.className

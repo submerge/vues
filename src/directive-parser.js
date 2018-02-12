@@ -2,59 +2,74 @@ var config = require('./config'),
     directives = require('./directives'),
     Filters = require('./filters')
 
-var KEY_RE = /^[^\|]+/,
+var KEY_RE          = /^[^\|<]+/,
     ARG_RE          = /([^:]+):(.+)$/,
-    FILTERS_RE = /\|[^|]+/g,
+    FILTERS_RE      = /\|[^\|<]+/g,
     FILTER_TOKEN_RE = /[^\s']+|'[^']+'/g,
+    DEPS_RE         = /<[^<\|]+/g,
     QUOTE_RE        = /'/g
     
 function Directive (directiveName, expression) {
+    
     var directive = directives[directiveName]
     if (typeof directive === 'function') {
         this._update = directive
     } else {
         for (var prop in directive) {
             if (prop === 'update') {
-                this._update = directive.update
-                continue
+                this['_update'] = directive.update
+            } else {
+                this[prop] = directive[prop]
             }
-            this[prop] = directive[prop]
         }
     }
+
+
+    this.directiveName = directiveName
+    this.expression = expression
 
     var rawKey   = expression.match(KEY_RE)[0], // guarded in parse
         argMatch = rawKey.match(ARG_RE)
 
     this.key = argMatch
-            ? argMatch[2].trim()
-            : rawKey.trim()
-    
+        ? argMatch[2].trim()
+        : rawKey.trim()
+
     this.arg = argMatch
         ? argMatch[1].trim()
-        : null    
-
-    var filterExpressions = expression.match(FILTERS_RE)
-    if (filterExpressions) {
-        this.filters = filterExpressions.map(function (filter) {
-            // TODO test performance against regex
-            // var tokens = filter.replace('|', '').trim().split(/\s+/)
+        : null
+    
+    var filterExps = expression.match(FILTERS_RE)
+    if (filterExps) {
+        this.filters = filterExps.map(function (filter) {
             var tokens = filter.slice(1)
-                               .match(FILTER_TOKEN_RE)
-                               .map(function (token) {
-                                   return token.replace(QUOTE_RE, '').trim()
-                               })  
+                .match(FILTER_TOKEN_RE)
+                .map(function (token) {
+                    return token.replace(QUOTE_RE, '').trim()
+                })
             return {
-                name: tokens[0],
-                apply: Filters[tokens[0]],
-                args: tokens.length > 1 ? tokens.slice(1) : null
+                name  : tokens[0],
+                apply : filters[tokens[0]],
+                args  : tokens.length > 1
+                        ? tokens.slice(1)
+                        : null
             }
         })
     } else {
         this.filters = null
     }
+
+    var depExp = expression.match(DEPS_RE)
+    if (depExp) {
+        this.deps = depExp[0].slice(1).trim().split(/\s+/)
+    }
 }
 
 Directive.prototype.update = function (value) {
+     // computed property
+     if (typeof value === 'function' && !this.fn) {
+        value = value()
+    }
     // apply filters
     if (this.filters) {
         value = this.applyFilters(value)
