@@ -1,4 +1,4 @@
-var Seed = require('./src/main')
+var Seed = require('../src/main')
 console.log('asdf')
 Seed.controller('Grandpa', function (scope, seed) {
     scope.name = 'John'
