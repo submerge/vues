@@ -46,6 +46,12 @@ function Seed (el, options) {
             || {}
     el.removeAttribute(dataPrefix)
 
+    // if the passed in data is already consumed by
+    // a Seed instance, make a copy from it
+    if (scope.$seed) {
+        scope = this.scope = scope.$dump()
+    }
+
     scope.$seed    = this
     scope.$destroy = this._destroy.bind(this)
     scope.$dump    = this._dump.bind(this)
@@ -77,7 +83,7 @@ Seed.prototype._compileNode = function (node, root) {
 
         self._compileTextNode(node)
 
-    } else {
+    } else if(node.nodeType === 1){
 
         var eachExp = node.getAttribute(eachAttr),
             ctrlExp = node.getAttribute(ctrlAttr)
@@ -184,7 +190,6 @@ Seed.prototype._bind = function (node, directive) {
     if (binding.value) {
         directive.update(binding.value)
     }
-
 }
 
 Seed.prototype._createBinding = function (key) {
@@ -203,7 +208,7 @@ Seed.prototype._createBinding = function (key) {
             return binding.value
         },
         set: function (value) {
-            if (value === binding) return
+            if (value === binding.value) return
             binding.changed = true
             binding.value = value
             binding.instances.forEach(function (instance) {

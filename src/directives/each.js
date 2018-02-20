@@ -16,8 +16,11 @@ var mutationHandlers = {
     push: function (m) {
         var self = this
         m.args.forEach(function (data, i) {
-            var seed = self.buildItem(data, self.collection.length + i)
-            self.container.insertBefore(seed.el, self.marker)
+            var seed = self.buildItem(data, i),
+                ref  = self.collection.length > m.args.length
+                        ? self.collection[m.args.length].$seed.el
+                        : self.marker
+            self.container.insertBefore(seed.el, ref)
         })
     },
     pop: function (m) {

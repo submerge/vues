@@ -3,12 +3,35 @@ module.exports = {
     each : require('./each'),
 
     text: function (value) {
-        this.el.textContent = value === null ?
-            '' : value.toString()
+        this.el.textContent =
+            (value !== null && value !== undefined)
+            ? value.toString() : ''
+    },
+    hide: function (value) {
+        this.el.style.display = value ? 'none' : ''  
     },
 
+    focus: function (value) {
+        this.el[value ? 'focus' : 'blur']()
+    },
     show: function (value) {
         this.el.style.display = value ? '' : 'none'
+    },
+
+    value: {
+        bind: function () {
+            var el = this.el, self = this
+            this.change = function () {
+                self.seed.scope[self.key] = el.value
+            }
+            el.addEventListener('change', this.change)
+        },
+        update: function (value) {
+            this.el.value = value
+        },
+        unbind: function () {
+            this.el.removeEventListener('change', this.change)
+        }
     },
 
     class: function (value) {
@@ -31,7 +54,7 @@ module.exports = {
             el.addEventListener('change', this.change)
         },
         update: function (value) {
-            this.el.checked = value
+            this.el.checked = !!value
         },
         unbind: function () {
             this.el.removeEventListener('change', this.change)

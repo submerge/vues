@@ -34,7 +34,8 @@ api.bootstrap = function (opts) {
     var app = {},
         n = 0,
         el, seed
-    while (el = document.querySelector('[' + config.prefix + '-controller]')) {
+    var selector = '[' + config.prefix + '-controller]'
+    while (el = document.querySelector(selector)) {
         seed = new Seed(el)
         if (el.id) {
             app['$' + el.id] = seed
